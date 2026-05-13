@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>冷蔵庫レシピジェネレーター</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Serif+JP:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #1c1916;
+      --card:       #28231e;
+      --card-main:  linear-gradient(145deg, #2e2416, #271f14);
+      --card-side:  linear-gradient(145deg, #1e2a16, #1b2414);
+      --card-soup:  linear-gradient(145deg, #162030, #162428);
+      --card-ex1:   linear-gradient(145deg, #2a1820, #26181e);
+      --card-ex2:   linear-gradient(145deg, #221828, #201a28);
+      --card-ex3:   linear-gradient(145deg, #182a28, #182424);
+      --input-bg:   #2e2820;
+      --text:       #f0ebe2;
+      --text-muted: #988f84;
+      --text-faint: #665e56;
+      --amber:      #e8a040;
+      --amber-b:    #f2c060;
+      --teal:       #38c0b0;
+      --rose:       #d87888;
+      --sage:       #7ab868;
+      --purple:     #a888d8;
+      --sky:        #5898c8;
+      --shadow:     rgba(0,0,0,0.5);
+    }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 8%  15%, rgba(220,100,40,0.22)  0%, transparent 40%),
+        radial-gradient(ellipse at 92% 10%, rgba(50,180,170,0.16)  0%, transparent 36%),
+        radial-gradient(ellipse at 75% 72%, rgba(150,70,200,0.14)  0%, transparent 40%),
+        radial-gradient(ellipse at 14% 82%, rgba(50,110,220,0.13)  0%, transparent 38%),
+        radial-gradient(ellipse at 52% 44%, rgba(200,150,50,0.09)  0%, transparent 50%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════
+       HEADER
+    ══════════════════════════════ */
+    header {
+      background: #120f0c;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Tickers ── */
+    .ticker-wrap {
+      background: rgba(255,255,255,0.04);
+      padding: 0.45rem 0;
+      overflow: hidden;
+    }
+    .ticker-wrap.bottom { background: rgba(255,255,255,0.03); }
+
+    .ticker-track {
+      display: inline-flex;
+      white-space: nowrap;
+      animation: ticker-fwd 36s linear infinite;
+    }
+    .ticker-track.reverse { animation: ticker-rev 42s linear infinite; }
+
+    .ticker-content {
+      font-size: 1.05rem;
+      padding-right: 1rem;
+      letter-spacing: 0.05em;
+      opacity: 0.85;
+    }
+    .ticker-bottom .ticker-content {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+    }
+
+    @keyframes ticker-fwd {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    @keyframes ticker-rev {
+      from { transform: translateX(-50%); }
+      to   { transform: translateX(0); }
+    }
+
+    /* ── Header body ── */
+    .header-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1020px;
+      margin: 0 auto;
+      padding: 2.2rem 2rem 2rem;
+      gap: 1.5rem;
+      position: relative;
+    }
+    .header-main::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 30% 60%, rgba(232,160,64,0.12) 0%, transparent 50%),
+        radial-gradient(circle at 80% 30%, rgba(56,192,176,0.08) 0%, transparent 40%);
+      pointer-events: none;
+    }
+
+    .header-left { position: relative; }
+
+    .header-label {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 0.9rem;
+      letter-spacing: 0.22em;
+      color: var(--amber);
+      opacity: 0.8;
+      display: block;
+      margin-bottom: 0.6rem;
+    }
+
+    .header-h1 {
+      font-family: 'Noto Serif JP', serif;
+      line-height: 1.15;
+      position: relative;
+    }
+    .h1-line1 {
+      display: block;
+      font-size: clamp(2.4rem, 6vw, 3.8rem);
+      font-weight: 700;
+      color: var(--amber-b);
+      letter-spacing: 0.04em;
+    }
+    .h1-connector {
+      display: block;
+      font-family: 'Bebas Neue', cursive;
+      font-size: clamp(1rem, 2.5vw, 1.4rem);
+      letter-spacing: 0.3em;
+      color: var(--teal);
+      opacity: 0.7;
+      margin: 0.1rem 0;
+    }
+    .h1-line2 {
+      display: block;
+      font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.1em;
+    }
+    .header-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.9rem;
+      letter-spacing: 0.06em;
+    }
+
+    .header-emoji-panel {
+      flex-shrink: 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.3rem;
+      font-size: clamp(1.4rem, 3.5vw, 2.4rem);
+      opacity: 0.6;
+      filter: drop-shadow(0 0 8px rgba(232,160,64,0.3));
+    }
+    .header-emoji-panel span {
+      opacity: 0.5;
+      animation: float 4s ease-in-out infinite;
+    }
+    .header-emoji-panel span:nth-child(2) { animation-delay: 1.3s; }
+    .header-emoji-panel span:nth-child(3) { animation-delay: 2.6s; }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-5px); }
+    }
+    @media (max-width: 520px) {
+      .header-emoji-panel { display: none; }
+    }
+
+    /* ══════════════════════════════
+       MAIN
+    ══════════════════════════════ */
+    main { max-width: 1020px; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
+
+    /* ── Input card ── */
+    .input-card {
+      background: var(--input-bg);
+      border-radius: 18px;
+      padding: 2rem;
+      box-shadow: 0 6px 32px var(--shadow);
+      margin-bottom: 2rem;
+    }
+    .input-label {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--amber-b);
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+    .input-hint {
+      font-size: 0.74rem;
+      color: var(--text-faint);
+      margin-bottom: 1.2rem;
+    }
+    .input-underline {
+      width: 100%;
+      border: none;
+      border-bottom: 2px solid rgba(232,160,64,0.3);
+      background: transparent;
+      padding: 0.5rem 0;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 1rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+      resize: none;
+    }
+    .input-underline:focus { border-bottom-color: var(--amber); }
+    .input-underline::placeholder { color: var(--text-faint); }
+    textarea.input-underline {
+      min-height: 80px;
+      display: block;
+      line-height: 1.7;
+    }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.65rem 1.5rem;
+      border: none;
+      border-radius: 100px;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--amber), #a06820);
+      color: #fff;
+      box-shadow: 0 3px 16px rgba(232,160,64,0.35);
+    }
+    .btn-primary:hover { box-shadow: 0 5px 22px rgba(232,160,64,0.5); transform: translateY(-1px); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      color: var(--text-muted);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.11); color: var(--text); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+    /* ── Loading ── */
+    #loading { display: none; text-align: center; padding: 3.5rem 0; }
+    .loader {
+      width: 42px; height: 42px;
+      border: 3px solid rgba(232,160,64,0.2);
+      border-top-color: var(--amber);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p { color: var(--text-muted); font-size: 0.85rem; }
+
+    /* ── Recipe grid ── */
+    #result { display: none; }
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .result-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--amber-b);
+    }
+
+    .recipe-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 720px) {
+      .recipe-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 460px) {
+      .recipe-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Recipe cards ── */
+    .recipe-card {
+      border-radius: 14px;
+      padding: 1.25rem 1.2rem 1.1rem;
+      box-shadow: 0 4px 20px var(--shadow);
+      position: relative;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .recipe-card:hover { box-shadow: 0 8px 30px var(--shadow); transform: translateY(-2px); }
+
+    .recipe-card.card-main   { background: var(--card-main); }
+    .recipe-card.card-side   { background: var(--card-side); }
+    .recipe-card.card-soup   { background: var(--card-soup); }
+    .recipe-card.card-extra1 { background: var(--card-ex1); }
+    .recipe-card.card-extra2 { background: var(--card-ex2); }
+    .recipe-card.card-extra3 { background: var(--card-ex3); }
+
+    .card-badge {
+      display: inline-block;
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.07em;
+      padding: 0.18rem 0.6rem;
+      border-radius: 100px;
+      margin-bottom: 0.65rem;
+    }
+    .badge-main   { background: rgba(232,160,64,0.2);  color: var(--amber-b); }
+    .badge-side   { background: rgba(122,184,104,0.2); color: var(--sage); }
+    .badge-soup   { background: rgba(88,152,200,0.2);  color: var(--sky); }
+    .badge-extra1 { background: rgba(216,120,136,0.2); color: var(--rose); }
+    .badge-extra2 { background: rgba(168,136,216,0.2); color: var(--purple); }
+    .badge-extra3 { background: rgba(56,192,176,0.2);  color: var(--teal); }
+
+    .card-name {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.35rem;
+      line-height: 1.4;
+    }
+    .card-desc {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin-bottom: 0.75rem;
+    }
+    .card-meta {
+      display: flex;
+      gap: 0.75rem;
+      font-size: 0.7rem;
+      color: var(--text-faint);
+      margin-bottom: 0.9rem;
+    }
+    .card-meta span { display: flex; align-items: center; gap: 0.2rem; }
+
+    .steps-toggle {
+      font-size: 0.75rem;
+      color: var(--amber);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      font-family: 'Noto Sans JP', sans-serif;
+      opacity: 0.8;
+      transition: opacity 0.15s;
+    }
+    .steps-toggle:hover { opacity: 1; }
+
+    .steps-list {
+      display: none;
+      margin-top: 0.7rem;
+      padding-left: 0;
+      list-style: none;
+    }
+    .steps-list.open { display: block; }
+    .steps-list li {
+      font-size: 0.77rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      padding: 0.28rem 0 0.28rem 1.5rem;
+      position: relative;
+    }
+    .steps-list li::before {
+      content: attr(data-step);
+      position: absolute;
+      left: 0; top: 0.28rem;
+      width: 1rem; height: 1rem;
+      background: rgba(232,160,64,0.25);
+      color: var(--amber-b);
+      font-size: 0.58rem;
+      font-weight: 700;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .fav-btn {
+      position: absolute;
+      top: 0.9rem; right: 0.9rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.15rem;
+      line-height: 1;
+      transition: transform 0.2s;
+      opacity: 0.7;
+      padding: 0.1rem;
+    }
+    .fav-btn:hover { transform: scale(1.2); opacity: 1; }
+    .fav-btn.active { opacity: 1; animation: pop 0.3s ease; }
+    @keyframes pop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.4); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── Favorites ── */
+    #favorites-section { margin-top: 2.5rem; }
+    .section-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--amber-b);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .fav-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .fav-item {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      box-shadow: 0 2px 12px var(--shadow);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .fav-item-info { flex: 1; }
+    .fav-item-name { font-weight: 500; font-size: 0.88rem; color: var(--text); }
+    .fav-item-meta { font-size: 0.7rem; color: var(--text-faint); margin-top: 0.2rem; }
+    .fav-remove {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-faint); font-size: 0.95rem; line-height: 1;
+      flex-shrink: 0; transition: color 0.2s;
+    }
+    .fav-remove:hover { color: var(--rose); }
+
+    .empty-state {
+      text-align: center; color: var(--text-faint);
+      font-size: 0.8rem; padding: 1.5rem;
+    }
+
+    /* ── Error ── */
+    #error-msg {
+      display: none;
+      background: rgba(216,120,136,0.12);
+      border-radius: 10px;
+      padding: 0.9rem 1.2rem;
+      color: var(--rose);
+      font-size: 0.85rem;
+      margin-top: 1rem;
+    }
+
+    /* ── Spacer ── */
+    .spacer { height: 2.5rem; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 2rem; left: 50%;
+      transform: translateX(-50%) translateY(1rem);
+      background: #3a3228;
+      color: var(--text);
+      padding: 0.6rem 1.4rem;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <header>
+    <!-- TOP TICKER: ingredients -->
+    <div class="ticker-wrap">
+      <div class="ticker-track">
+        <span class="ticker-content">🥕 🧅 🥚 🍅 🥦 🧄 🫑 🍗 🧀 🍋 🥬 🫒 🌶 🍄 🥒 🫛 🍆 🐟 🥩 🫕 🧆 🥜 🌽 🍎 🥔 🫚 🍣 🍛 🥘 🍲 🥗 🫙 　　　</span>
+        <span class="ticker-content">🥕 🧅 🥚 🍅 🥦 🧄 🫑 🍗 🧀 🍋 🥬 🫒 🌶 🍄 🥒 🫛 🍆 🐟 🥩 🫕 🧆 🥜 🌽 🍎 🥔 🫚 🍣 🍛 🥘 🍲 🥗 🫙 　　　</span>
+      </div>
+    </div>
+
+    <!-- MAIN HEADER -->
+    <div class="header-main">
+      <div class="header-left">
+        <span class="header-label">✦ REFRIGERATOR RECIPE GENERATOR ✦</span>
+        <h1 class="header-h1">
+          <span class="h1-line1">冷蔵庫</span>
+          <span class="h1-connector">▸▸▸ RECIPE ▸▸▸</span>
+          <span class="h1-line2">6品の献立</span>
+        </h1>
+        <p class="header-sub">今ある材料から、バランスのとれた6品を提案します</p>
+      </div>
+      <div class="header-emoji-panel" aria-hidden="true">
+        <span>🍳</span><span>🥘</span><span>🍜</span>
+        <span>🥗</span><span>🍱</span><span>🍲</span>
+        <span>🫕</span><span>🍛</span><span>🥙</span>
+      </div>
+    </div>
+
+    <!-- BOTTOM TICKER: cooking methods -->
+    <div class="ticker-wrap ticker-bottom bottom">
+      <div class="ticker-track reverse">
+        <span class="ticker-content">🍽 盛り付けるだけ　　🤝 和えるだけ　　🧂 塩とオイルだけ　　🔥 炒めるだけ　　💧 煮るだけ　　✨ 本格調理も　　🌿 漬けるだけ　　❄️ 冷やすだけ　　　　</span>
+        <span class="ticker-content">🍽 盛り付けるだけ　　🤝 和えるだけ　　🧂 塩とオイルだけ　　🔥 炒めるだけ　　💧 煮るだけ　　✨ 本格調理も　　🌿 漬けるだけ　　❄️ 冷やすだけ　　　　</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- INPUT -->
+    <div class="input-card">
+      <label class="input-label" for="ingredients">冷蔵庫にある材料</label>
+      <p class="input-hint">カンマ・改行・スペース区切りで入力 — 例：卵、玉ねぎ、鶏もも肉、豆腐、味噌</p>
+      <textarea
+        class="input-underline"
+        id="ingredients"
+        placeholder="卵、玉ねぎ、鶏もも肉、豆腐、にんじん..."
+        rows="3"
+      ></textarea>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="generate-btn" onclick="generateRecipes(false)">
+          ✨ 6品を提案する
+        </button>
+        <button class="btn btn-secondary" id="regen-btn" onclick="generateRecipes(true)" style="display:none">
+          🔄 気に入らない場合は再提示
+        </button>
+      </div>
+      <div id="error-msg"></div>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loading">
+      <div class="loader"></div>
+      <p>Claude が6品の献立を考えています...</p>
+    </div>
+
+    <!-- RESULT -->
+    <div id="result">
+      <div class="result-header">
+        <span class="result-title">📋 今日の6品献立</span>
+      </div>
+      <div class="recipe-grid" id="recipe-grid"></div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <!-- FAVORITES -->
+    <div id="favorites-section">
+      <p class="section-title">⭐ お気に入りレシピ</p>
+      <div class="fav-list" id="fav-list"></div>
+    </div>
+  </main>
+
+  <div id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = 'recipe-favorites-v2';
+    let previousRecipes = [];
+    let currentRecipes = null;
+
+    const TYPES = ['main', 'side', 'soup', 'extra1', 'extra2', 'extra3'];
+
+    const BADGE = {
+      main:   { label: 'メイン',    cls: 'badge-main',   cardCls: 'card-main'   },
+      side:   { label: '副菜',      cls: 'badge-side',   cardCls: 'card-side'   },
+      soup:   { label: '汁物',      cls: 'badge-soup',   cardCls: 'card-soup'   },
+      extra1: { label: 'もう一品①', cls: 'badge-extra1', cardCls: 'card-extra1' },
+      extra2: { label: 'もう一品②', cls: 'badge-extra2', cardCls: 'card-extra2' },
+      extra3: { label: 'もう一品③', cls: 'badge-extra3', cardCls: 'card-extra3' },
+    };
+
+    function getFavorites() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+      catch { return []; }
+    }
+    function saveFavorites(favs) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(favs));
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    function toggleFavorite(recipe, type, btn) {
+      const favs = getFavorites();
+      const id = `${type}-${recipe.name}`;
+      const idx = favs.findIndex(f => f.id === id);
+      if (idx === -1) {
+        favs.unshift({ id, type, ...recipe, savedAt: new Date().toLocaleDateString('ja-JP') });
+        btn.textContent = '⭐';
+        btn.classList.add('active');
+        showToast(`「${recipe.name}」をお気に入りに追加`);
+      } else {
+        favs.splice(idx, 1);
+        btn.textContent = '☆';
+        btn.classList.remove('active');
+        showToast(`「${recipe.name}」を削除しました`);
+      }
+      saveFavorites(favs);
+      renderFavorites();
+    }
+
+    function isFavorited(type, name) {
+      return getFavorites().some(f => f.id === `${type}-${name}`);
+    }
+
+    function difficultyIcon(d) {
+      if (d === '簡単')   return '🟢';
+      if (d === '本格的') return '🔴';
+      return '🟡';
+    }
+
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g,  '&amp;')
+        .replace(/</g,  '&lt;')
+        .replace(/>/g,  '&gt;')
+        .replace(/"/g,  '&quot;');
+    }
+
+    function renderCard(type, recipe) {
+      const b = BADGE[type];
+      const favored = isFavorited(type, recipe.name);
+      const cardId  = `card-${type}`;
+      const stepsId = `steps-${type}`;
+
+      return `
+        <div class="recipe-card ${b.cardCls}" id="${cardId}">
+          <button class="fav-btn ${favored ? 'active' : ''}"
+            onclick="handleFav('${type}')"
+            title="お気に入り">${favored ? '⭐' : '☆'}</button>
+          <span class="card-badge ${b.cls}">${b.label}</span>
+          <p class="card-name">${escHtml(recipe.name)}</p>
+          <p class="card-desc">${escHtml(recipe.description)}</p>
+          <div class="card-meta">
+            <span>⏱ ${escHtml(recipe.time)}</span>
+            <span>${difficultyIcon(recipe.difficulty)} ${escHtml(recipe.difficulty)}</span>
+          </div>
+          <button class="steps-toggle" onclick="toggleSteps('${stepsId}', this)">▶ 作り方を見る</button>
+          <ul class="steps-list" id="${stepsId}">
+            ${recipe.steps.map((s, i) => `<li data-step="${i+1}">${escHtml(s)}</li>`).join('')}
+          </ul>
+        </div>`;
+    }
+
+    function handleFav(type) {
+      if (!currentRecipes) return;
+      const recipe = currentRecipes[type];
+      const card = document.getElementById(`card-${type}`);
+      const btn  = card.querySelector('.fav-btn');
+      toggleFavorite(recipe, type, btn);
+    }
+
+    function toggleSteps(id, btn) {
+      const el   = document.getElementById(id);
+      const open = el.classList.toggle('open');
+      btn.textContent = open ? '▼ 作り方を閉じる' : '▶ 作り方を見る';
+    }
+
+    function renderFavorites() {
+      const list = document.getElementById('fav-list');
+      const favs = getFavorites();
+      if (favs.length === 0) {
+        list.innerHTML = '<p class="empty-state">まだお気に入りはありません<br>☆ ボタンで保存できます</p>';
+        return;
+      }
+      list.innerHTML = favs.map(f => `
+        <div class="fav-item">
+          <div class="fav-item-info">
+            <p class="fav-item-name">${escHtml(f.name)}</p>
+            <p class="fav-item-meta">${BADGE[f.type]?.label ?? f.type} · ${escHtml(f.time)} · ${escHtml(f.difficulty)} · ${f.savedAt}</p>
+          </div>
+          <button class="fav-remove" onclick="removeFavorite('${escHtml(f.id)}')" title="削除">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function removeFavorite(id) {
+      saveFavorites(getFavorites().filter(f => f.id !== id));
+      renderFavorites();
+      if (currentRecipes) {
+        TYPES.forEach(type => {
+          const recipe = currentRecipes[type];
+          if (recipe && `${type}-${recipe.name}` === id) {
+            const card = document.getElementById(`card-${type}`);
+            if (card) {
+              const btn = card.querySelector('.fav-btn');
+              btn.textContent = '☆';
+              btn.classList.remove('active');
+            }
+          }
+        });
+      }
+      showToast('お気に入りから削除しました');
+    }
+
+    async function generateRecipes(isRegen) {
+      const ingredientsEl = document.getElementById('ingredients');
+      const ingredients   = ingredientsEl.value.trim();
+      if (!ingredients) { ingredientsEl.focus(); showToast('材料を入力してください'); return; }
+
+      const generateBtn = document.getElementById('generate-btn');
+      const regenBtn    = document.getElementById('regen-btn');
+      const loadingEl   = document.getElementById('loading');
+      const resultEl    = document.getElementById('result');
+      const errorEl     = document.getElementById('error-msg');
+
+      generateBtn.disabled = true;
+      regenBtn.disabled    = true;
+      loadingEl.style.display = 'block';
+      resultEl.style.display  = 'none';
+      errorEl.style.display   = 'none';
+
+      if (!isRegen) previousRecipes = [];
+
+      try {
+        const res  = await fetch('/api/claude', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ingredients, previousRecipes }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'エラーが発生しました');
+
+        currentRecipes = data.recipes;
+
+        document.getElementById('recipe-grid').innerHTML =
+          TYPES.map(type => renderCard(type, data.recipes[type])).join('');
+
+        previousRecipes.push(
+          Object.values(data.recipes).map(r => r.name).join('、')
+        );
+        if (previousRecipes.length > 3) previousRecipes.shift();
+
+        resultEl.style.display = 'block';
+        regenBtn.style.display = 'inline-flex';
+        resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (err) {
+        errorEl.textContent    = err.message;
+        errorEl.style.display  = 'block';
+      } finally {
+        generateBtn.disabled = false;
+        regenBtn.disabled    = false;
+        loadingEl.style.display = 'none';
+      }
+    }
+
+    document.getElementById('ingredients').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) generateRecipes(false);
+    });
+
+    renderFavorites();
+  </script>
+</body>
+</html>
