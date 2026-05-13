@@ -483,6 +483,8 @@
       border-radius: 10px;
       padding: 0.85rem 1rem;
       box-shadow: 0 2px 12px var(--shadow);
+    }
+    .fav-item-top {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
@@ -490,6 +492,56 @@
     }
     .fav-item-info { flex: 1; }
     .fav-item-name { font-weight: 500; font-size: 0.88rem; color: var(--text); }
+    .fav-toggle {
+      font-size: 0.72rem;
+      color: var(--amber);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.35rem 0 0;
+      font-family: 'Noto Sans JP', sans-serif;
+      opacity: 0.8;
+      transition: opacity 0.15s;
+      display: block;
+      text-align: left;
+    }
+    .fav-toggle:hover { opacity: 1; }
+    .fav-detail {
+      display: none;
+      margin-top: 0.7rem;
+      padding-top: 0.7rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .fav-detail.open { display: block; }
+    .fav-detail-desc {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin-bottom: 0.6rem;
+    }
+    .fav-steps { padding-left: 0; list-style: none; }
+    .fav-steps li {
+      font-size: 0.77rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      padding: 0.28rem 0 0.28rem 1.5rem;
+      position: relative;
+    }
+    .fav-steps li::before {
+      content: attr(data-step);
+      position: absolute;
+      left: 0; top: 0.28rem;
+      width: 1rem; height: 1rem;
+      background: rgba(232,160,64,0.25);
+      color: var(--amber-b);
+      font-size: 0.58rem;
+      font-weight: 700;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
     .fav-item-name::before {
       content: '★';
       color: #fbbf24;
@@ -857,6 +909,12 @@
       btn.textContent = open ? '▼ 作り方を閉じる' : '▶ 作り方を見る';
     }
 
+    function toggleFavDetail(id, btn) {
+      const el   = document.getElementById(id);
+      const open = el.classList.toggle('open');
+      btn.textContent = open ? '▼ 閉じる' : '▶ 作り方を見る';
+    }
+
     function renderFavorites() {
       const list = document.getElementById('fav-list');
       const favs = getFavorites();
@@ -873,15 +931,28 @@
         list.innerHTML = '<p class="empty-state">まだお気に入りはありません<br>☆ ボタンで保存できます</p>';
         return;
       }
-      list.innerHTML = favs.map(f => `
-        <div class="fav-item">
-          <div class="fav-item-info">
-            <p class="fav-item-name">${escHtml(f.name)}</p>
-            <p class="fav-item-meta">${BADGE[f.type]?.label ?? f.type} · ${escHtml(f.time)} · ${escHtml(f.difficulty)} · ${f.savedAt}</p>
+      list.innerHTML = favs.map((f, i) => {
+        const detailId = `fav-detail-${i}`;
+        const stepsHtml = Array.isArray(f.steps) && f.steps.length > 0
+          ? `<ul class="fav-steps">${f.steps.map((s, si) => `<li data-step="${si+1}">${escHtml(s)}</li>`).join('')}</ul>`
+          : '';
+        return `
+          <div class="fav-item">
+            <div class="fav-item-top">
+              <div class="fav-item-info">
+                <p class="fav-item-name">${escHtml(f.name)}</p>
+                <p class="fav-item-meta">${BADGE[f.type]?.label ?? f.type} · ${escHtml(f.time)} · ${escHtml(f.difficulty)} · ${f.savedAt}</p>
+              </div>
+              <button class="fav-remove" onclick="removeFavorite('${escHtml(f.id)}')" title="削除">✕</button>
+            </div>
+            <button class="fav-toggle" onclick="toggleFavDetail('${detailId}', this)">▶ 作り方を見る</button>
+            <div class="fav-detail" id="${detailId}">
+              ${f.description ? `<p class="fav-detail-desc">${escHtml(f.description)}</p>` : ''}
+              ${stepsHtml}
+            </div>
           </div>
-          <button class="fav-remove" onclick="removeFavorite('${escHtml(f.id)}')" title="削除">✕</button>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function removeFavorite(id) {
