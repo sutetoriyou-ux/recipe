@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>お気に入りレシピ一覧 — 冷蔵庫レシピ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Serif+JP:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #1c1916;
+      --card:       #28231e;
+      --card-main:  linear-gradient(145deg, #2e2416, #271f14);
+      --card-side:  linear-gradient(145deg, #1e2a16, #1b2414);
+      --card-soup:  linear-gradient(145deg, #162030, #162428);
+      --card-ex1:   linear-gradient(145deg, #2a1820, #26181e);
+      --card-ex2:   linear-gradient(145deg, #221828, #201a28);
+      --card-ex3:   linear-gradient(145deg, #182a28, #182424);
+      --input-bg:   #2e2820;
+      --text:       #f0ebe2;
+      --text-muted: #988f84;
+      --text-faint: #665e56;
+      --amber:      #e8a040;
+      --amber-b:    #f2c060;
+      --teal:       #38c0b0;
+      --rose:       #d87888;
+      --sage:       #7ab868;
+      --purple:     #a888d8;
+      --sky:        #5898c8;
+      --shadow:     rgba(0,0,0,0.5);
+    }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 8%  15%, rgba(220,100,40,0.22)  0%, transparent 40%),
+        radial-gradient(ellipse at 92% 10%, rgba(50,180,170,0.16)  0%, transparent 36%),
+        radial-gradient(ellipse at 75% 72%, rgba(150,70,200,0.14)  0%, transparent 40%),
+        radial-gradient(ellipse at 14% 82%, rgba(50,110,220,0.13)  0%, transparent 38%),
+        radial-gradient(ellipse at 52% 44%, rgba(200,150,50,0.09)  0%, transparent 50%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: #120f0c;
+      overflow: hidden;
+    }
+
+    .ticker-wrap {
+      background: rgba(255,255,255,0.04);
+      padding: 0.45rem 0;
+      overflow: hidden;
+    }
+    .ticker-track {
+      display: inline-flex;
+      white-space: nowrap;
+      animation: ticker-fwd 36s linear infinite;
+    }
+    .ticker-content {
+      font-size: 1.05rem;
+      padding-right: 1rem;
+      letter-spacing: 0.05em;
+      opacity: 0.85;
+    }
+    @keyframes ticker-fwd {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    .header-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1020px;
+      margin: 0 auto;
+      padding: 1.6rem 2rem;
+      gap: 1.5rem;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 1.2rem; }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.5rem 1.1rem;
+      border: 1px solid rgba(232,160,64,0.3);
+      border-radius: 100px;
+      background: rgba(232,160,64,0.08);
+      color: var(--amber);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 0.82rem;
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+    }
+    .back-btn:hover { background: rgba(232,160,64,0.18); color: var(--amber-b); }
+
+    .header-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+      font-weight: 700;
+      color: var(--amber-b);
+    }
+
+    main { max-width: 1020px; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
+
+    .page-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .fav-count-info {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--amber-b);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .fav-count-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--amber), #c07820);
+      color: #1c1916;
+      border-radius: 100px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      min-width: 1.4rem;
+      height: 1.4rem;
+      padding: 0 0.4rem;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.2rem;
+      border: none;
+      border-radius: 100px;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      color: var(--text-muted);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.11); color: var(--text); }
+    .btn-danger {
+      background: rgba(216,120,136,0.12);
+      color: var(--rose);
+      border: 1px solid rgba(216,120,136,0.28);
+    }
+    .btn-danger:hover { background: rgba(216,120,136,0.22); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .search-bar {
+      width: 100%;
+      max-width: 340px;
+      border: none;
+      border-bottom: 2px solid rgba(232,160,64,0.3);
+      background: transparent;
+      padding: 0.4rem 0;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 0.9rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-bar:focus { border-bottom-color: var(--amber); }
+    .search-bar::placeholder { color: var(--text-faint); }
+
+    .filter-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+      align-items: center;
+    }
+    .filter-btn {
+      font-size: 0.72rem;
+      padding: 0.22rem 0.7rem;
+      border-radius: 100px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      background: rgba(232,160,64,0.15);
+      border-color: rgba(232,160,64,0.4);
+      color: var(--amber-b);
+    }
+
+    .fav-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 620px) {
+      .fav-grid { grid-template-columns: 1fr; }
+    }
+
+    .fav-card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 1.1rem 1.1rem 1rem;
+      box-shadow: 0 4px 20px var(--shadow);
+      transition: box-shadow 0.2s, transform 0.2s;
+      position: relative;
+    }
+    .fav-card:hover { box-shadow: 0 8px 28px var(--shadow); transform: translateY(-2px); }
+
+    .fav-card-type {
+      display: inline-block;
+      font-size: 0.64rem;
+      font-weight: 500;
+      letter-spacing: 0.07em;
+      padding: 0.15rem 0.55rem;
+      border-radius: 100px;
+      margin-bottom: 0.55rem;
+    }
+    .type-main   { background: rgba(232,160,64,0.2);  color: var(--amber-b); }
+    .type-side   { background: rgba(122,184,104,0.2); color: var(--sage); }
+    .type-soup   { background: rgba(88,152,200,0.2);  color: var(--sky); }
+    .type-extra1 { background: rgba(216,120,136,0.2); color: var(--rose); }
+    .type-extra2 { background: rgba(168,136,216,0.2); color: var(--purple); }
+    .type-extra3 { background: rgba(56,192,176,0.2);  color: var(--teal); }
+
+    .fav-card-name {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+      line-height: 1.4;
+      padding-right: 1.8rem;
+    }
+    .fav-card-name::before {
+      content: '★';
+      color: #fbbf24;
+      font-size: 0.75rem;
+      margin-right: 0.35rem;
+      text-shadow: 0 0 6px rgba(251,191,36,0.4);
+    }
+    .fav-card-meta {
+      font-size: 0.7rem;
+      color: var(--text-faint);
+      margin-bottom: 0.65rem;
+    }
+    .fav-card-desc {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin-bottom: 0.7rem;
+    }
+
+    .steps-toggle {
+      font-size: 0.73rem;
+      color: var(--amber);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      font-family: 'Noto Sans JP', sans-serif;
+      opacity: 0.8;
+      transition: opacity 0.15s;
+    }
+    .steps-toggle:hover { opacity: 1; }
+
+    .steps-list {
+      display: none;
+      margin-top: 0.65rem;
+      padding-left: 0;
+      list-style: none;
+    }
+    .steps-list.open { display: block; }
+    .steps-list li {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      padding: 0.26rem 0 0.26rem 1.5rem;
+      position: relative;
+    }
+    .steps-list li::before {
+      content: attr(data-step);
+      position: absolute;
+      left: 0; top: 0.26rem;
+      width: 1rem; height: 1rem;
+      background: rgba(232,160,64,0.25);
+      color: var(--amber-b);
+      font-size: 0.58rem;
+      font-weight: 700;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .fav-remove {
+      position: absolute;
+      top: 0.85rem; right: 0.9rem;
+      background: none; border: none; cursor: pointer;
+      color: var(--text-faint); font-size: 0.9rem;
+      transition: color 0.2s;
+      padding: 0.1rem;
+    }
+    .fav-remove:hover { color: var(--rose); }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-faint);
+      font-size: 0.85rem;
+      padding: 4rem 1.5rem;
+      line-height: 1.9;
+    }
+    .empty-state a {
+      color: var(--amber);
+      text-decoration: none;
+    }
+    .empty-state a:hover { color: var(--amber-b); }
+
+    #toast {
+      position: fixed;
+      bottom: 2rem; left: 50%;
+      transform: translateX(-50%) translateY(1rem);
+      background: #3a3228;
+      color: var(--text);
+      padding: 0.6rem 1.4rem;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="ticker-wrap">
+      <div class="ticker-track">
+        <span class="ticker-content">🥕 🧅 🥚 🍅 🥦 🧄 🫑 🍗 🧀 🍋 🥬 🫒 🌶 🍄 🥒 🫛 🍆 🐟 🥩 🫕 🧆 🥜 🌽 🍎 🥔 🫚 🍣 🍛 🥘 🍲 🥗 🫙 　　　</span>
+        <span class="ticker-content">🥕 🧅 🥚 🍅 🥦 🧄 🫑 🍗 🧀 🍋 🥬 🫒 🌶 🍄 🥒 🫛 🍆 🐟 🥩 🫕 🧆 🥜 🌽 🍎 🥔 🫚 🍣 🍛 🥘 🍲 🥗 🫙 　　　</span>
+      </div>
+    </div>
+    <div class="header-main">
+      <div class="header-left">
+        <a href="/" class="back-btn">← ホームへ</a>
+        <h1 class="header-title">★ お気に入りレシピ一覧</h1>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-toolbar">
+      <p class="fav-count-info" id="count-info">
+        <span class="section-title-star">★</span> お気に入り
+      </p>
+      <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap">
+        <input type="search" class="search-bar" id="search-input" placeholder="レシピ名で検索..." oninput="applyFilters()" />
+        <button class="btn btn-danger" id="clear-all-btn" onclick="confirmClearAll()" style="display:none">🗑 全て削除</button>
+      </div>
+    </div>
+
+    <div class="filter-row" id="filter-row">
+      <span style="font-size:0.72rem;color:var(--text-faint)">絞り込み：</span>
+      <button class="filter-btn active" data-type="all" onclick="setTypeFilter('all', this)">すべて</button>
+      <button class="filter-btn" data-type="main"   onclick="setTypeFilter('main',   this)">メイン</button>
+      <button class="filter-btn" data-type="side"   onclick="setTypeFilter('side',   this)">副菜</button>
+      <button class="filter-btn" data-type="soup"   onclick="setTypeFilter('soup',   this)">汁物</button>
+      <button class="filter-btn" data-type="extra1" onclick="setTypeFilter('extra1', this)">もう一品①</button>
+      <button class="filter-btn" data-type="extra2" onclick="setTypeFilter('extra2', this)">もう一品②</button>
+      <button class="filter-btn" data-type="extra3" onclick="setTypeFilter('extra3', this)">もう一品③</button>
+    </div>
+
+    <div class="fav-grid" id="fav-grid"></div>
+  </main>
+
+  <div id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = 'recipe-favorites-v2';
+
+    const TYPE_LABELS = {
+      main:   'メイン',
+      side:   '副菜',
+      soup:   '汁物',
+      extra1: 'もう一品①',
+      extra2: 'もう一品②',
+      extra3: 'もう一品③',
+    };
+
+    let currentTypeFilter = 'all';
+
+    function getFavorites() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+      catch { return []; }
+    }
+    function saveFavorites(favs) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(favs));
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function toggleSteps(id, btn) {
+      const el   = document.getElementById(id);
+      const open = el.classList.toggle('open');
+      btn.textContent = open ? '▼ 作り方を閉じる' : '▶ 作り方を見る';
+    }
+
+    function setTypeFilter(type, btn) {
+      currentTypeFilter = type;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const query = document.getElementById('search-input').value.trim().toLowerCase();
+      const favs  = getFavorites();
+
+      const filtered = favs.filter(f => {
+        const typeOk = currentTypeFilter === 'all' || f.type === currentTypeFilter;
+        const nameOk = !query || f.name.toLowerCase().includes(query);
+        return typeOk && nameOk;
+      });
+
+      renderGrid(filtered, favs.length);
+    }
+
+    function renderGrid(favs, total) {
+      const grid = document.getElementById('fav-grid');
+      const countInfo = document.getElementById('count-info');
+      const clearBtn  = document.getElementById('clear-all-btn');
+      const filterRow = document.getElementById('filter-row');
+
+      const showing = favs.length !== total ? `${favs.length} / ${total}` : total;
+      countInfo.innerHTML = `<span style="color:#fbbf24;text-shadow:0 0 6px rgba(251,191,36,0.4)">★</span> お気に入り <span class="fav-count-badge">${showing}</span>`;
+
+      clearBtn.style.display  = total > 0  ? 'inline-flex' : 'none';
+      filterRow.style.display = total >= 3 ? 'flex' : 'none';
+
+      if (favs.length === 0) {
+        const msg = total === 0
+          ? `まだお気に入りはありません<br><a href="/">ホームでレシピを生成</a>して ☆ で保存しましょう`
+          : `該当するレシピが見つかりません`;
+        grid.innerHTML = `<p class="empty-state" style="grid-column:1/-1">${msg}</p>`;
+        return;
+      }
+
+      grid.innerHTML = favs.map((f, i) => {
+        const stepsId  = `steps-${i}`;
+        const typeLabel = TYPE_LABELS[f.type] ?? f.type;
+        const typeCls   = `type-${f.type}`;
+        const stepsHtml = Array.isArray(f.steps) && f.steps.length > 0
+          ? `<ul class="steps-list" id="${stepsId}">${f.steps.map((s, si) => `<li data-step="${si+1}">${escHtml(s)}</li>`).join('')}</ul>`
+          : '';
+        return `
+          <div class="fav-card">
+            <button class="fav-remove" onclick="removeFavorite('${escHtml(f.id)}')" title="削除">✕</button>
+            <span class="fav-card-type ${typeCls}">${typeLabel}</span>
+            <p class="fav-card-name">${escHtml(f.name)}</p>
+            <p class="fav-card-meta">⏱ ${escHtml(f.time)} · ${escHtml(f.difficulty)} · ${escHtml(f.savedAt)}</p>
+            ${f.description ? `<p class="fav-card-desc">${escHtml(f.description)}</p>` : ''}
+            ${stepsHtml ? `<button class="steps-toggle" onclick="toggleSteps('${stepsId}', this)">▶ 作り方を見る</button>${stepsHtml}` : ''}
+          </div>`;
+      }).join('');
+    }
+
+    function removeFavorite(id) {
+      saveFavorites(getFavorites().filter(f => f.id !== id));
+      showToast('お気に入りから削除しました');
+      applyFilters();
+    }
+
+    function confirmClearAll() {
+      const count = getFavorites().length;
+      if (count === 0) return;
+      if (!confirm(`お気に入り ${count} 件を全て削除しますか？`)) return;
+      saveFavorites([]);
+      showToast('全て削除しました');
+      applyFilters();
+    }
+
+    applyFilters();
+  </script>
+</body>
+</html>

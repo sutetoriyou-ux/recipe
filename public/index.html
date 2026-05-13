@@ -656,6 +656,13 @@
       box-shadow: 0 4px 20px rgba(0,0,0,0.6);
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .btn-stop {
+      background: rgba(216,120,136,0.15);
+      color: var(--rose);
+      border: 1px solid rgba(216,120,136,0.3);
+    }
+    .btn-stop:hover { background: rgba(216,120,136,0.25); color: #e89098; }
   </style>
 </head>
 <body>
@@ -699,11 +706,11 @@
     <!-- INPUT -->
     <div class="input-card">
       <label class="input-label" for="ingredients">冷蔵庫にある材料</label>
-      <p class="input-hint">カンマ・改行・スペース区切りで入力 — 例：卵、玉ねぎ、鶏もも肉、豆腐、味噌</p>
+      <p class="input-hint">カンマ・改行・スペース区切りで入力。量や単位も書けます — 例：卵 3個、玉ねぎ 1個、鶏もも肉 300g、ほうれん草 1束、豆腐 半丁</p>
       <textarea
         class="input-underline"
         id="ingredients"
-        placeholder="卵、玉ねぎ、鶏もも肉、豆腐、にんじん..."
+        placeholder="卵 3個、玉ねぎ 1個、鶏もも肉 300g、にんじん 2本..."
         rows="3"
       ></textarea>
 
@@ -732,7 +739,8 @@
     <!-- LOADING -->
     <div id="loading">
       <div class="loader"></div>
-      <p>Claude が6品の献立を考えています...</p>
+      <p id="loading-msg">✨ AIシェフが腕を振るっています...</p>
+      <button class="btn btn-stop" id="stop-btn" onclick="stopGeneration()" style="display:none;margin-top:1.2rem">⏹ 停止する</button>
     </div>
 
     <!-- RESULT -->
@@ -748,9 +756,12 @@
 
     <!-- FAVORITES -->
     <div id="favorites-section">
-      <p class="section-title" id="fav-section-title">
-        <span class="section-title-star">★</span> お気に入りレシピ
-      </p>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <p class="section-title" id="fav-section-title" style="margin-bottom:0">
+          <span class="section-title-star">★</span> お気に入りレシピ
+        </p>
+        <a href="/favorites" class="btn btn-secondary" id="fav-page-link" style="display:none;font-size:0.78rem;text-decoration:none;padding:0.4rem 1rem;align-items:center;gap:0.3rem">📋 一覧ページで見る</a>
+      </div>
       <div class="fav-list" id="fav-list"></div>
     </div>
   </main>
@@ -791,6 +802,38 @@
     }
     let previousRecipes = [];
     let currentRecipes = null;
+    let currentAbortController = null;
+    let loadingInterval = null;
+
+    const LOADING_MESSAGES = [
+      '✨ AIシェフが腕を振るっています...',
+      '🔪 食材を丁寧に刻んでいます...',
+      '🍳 フライパンをじっくり温めています...',
+      '🧂 絶妙な味付けを調整しています...',
+      '🥘 コトコト煮込んでいます...',
+      '🌿 ハーブで香りを加えています...',
+      '🍽 美しく盛り付けを考えています...',
+      '👨‍🍳 渾身の献立を仕上げています...',
+      '🫕 隠し味を加えています...',
+    ];
+
+    function startLoadingAnimation() {
+      const msgEl = document.getElementById('loading-msg');
+      let idx = 0;
+      msgEl.textContent = LOADING_MESSAGES[0];
+      loadingInterval = setInterval(() => {
+        idx = (idx + 1) % LOADING_MESSAGES.length;
+        msgEl.textContent = LOADING_MESSAGES[idx];
+      }, 2500);
+    }
+
+    function stopLoadingAnimation() {
+      if (loadingInterval) { clearInterval(loadingInterval); loadingInterval = null; }
+    }
+
+    function stopGeneration() {
+      if (currentAbortController) currentAbortController.abort();
+    }
 
     const TYPES = ['main', 'side', 'soup', 'extra1', 'extra2', 'extra3'];
 
@@ -920,6 +963,9 @@
       const favs = getFavorites();
       updateFavJumpBtn(favs.length);
 
+      const favPageLink = document.getElementById('fav-page-link');
+      if (favPageLink) favPageLink.style.display = favs.length >= 3 ? 'inline-flex' : 'none';
+
       const titleEl = document.getElementById('fav-section-title');
       if (titleEl) {
         titleEl.innerHTML = favs.length > 0
@@ -985,20 +1031,25 @@
       const loadingEl   = document.getElementById('loading');
       const resultEl    = document.getElementById('result');
       const errorEl     = document.getElementById('error-msg');
+      const stopBtn     = document.getElementById('stop-btn');
 
       generateBtn.disabled = true;
       regenBtn.disabled    = true;
+      stopBtn.style.display = 'inline-flex';
       loadingEl.style.display = 'block';
       resultEl.style.display  = 'none';
       errorEl.style.display   = 'none';
 
       if (!isRegen) previousRecipes = [];
+      currentAbortController = new AbortController();
+      startLoadingAnimation();
 
       try {
         const res  = await fetch('/api/claude', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ingredients, previousRecipes, condiments: getSelectedCondiments() }),
+          signal: currentAbortController.signal,
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'エラーが発生しました');
@@ -1017,12 +1068,17 @@
         regenBtn.style.display = 'inline-flex';
         resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {
-        errorEl.textContent    = err.message;
-        errorEl.style.display  = 'block';
+        if (err.name !== 'AbortError') {
+          errorEl.textContent   = err.message;
+          errorEl.style.display = 'block';
+        }
       } finally {
         generateBtn.disabled = false;
         regenBtn.disabled    = false;
+        stopBtn.style.display = 'none';
         loadingEl.style.display = 'none';
+        stopLoadingAnimation();
+        currentAbortController = null;
       }
     }
 
