@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { ingredients, previousRecipes } = req.body;
+  const { ingredients, previousRecipes, condiments } = req.body;
 
   if (!ingredients || ingredients.trim() === "") {
     return res.status(400).json({ error: "材料を入力してください" });
@@ -18,11 +18,16 @@ export default async function handler(req, res) {
       ? `\n\n【前回提案したレシピ（重複禁止）】\n${previousRecipes.join("\n")}`
       : "";
 
+  const condimentsText =
+    condiments && condiments.length > 0
+      ? `\n\n【使える調味料】\n${condiments.join("、")}\n（上記の調味料を積極的に活用し、リスト外の調味料はなるべく使わないでください）`
+      : "";
+
   const prompt = `あなたは家庭料理のプロです。冷蔵庫にある材料からバランスの良い献立を提案してください。
 
 【冷蔵庫の材料】
 ${ingredients}
-${avoidText}
+${avoidText}${condimentsText}
 
 以下の6品を提案してください。本格的な料理だけでなく、盛り付けるだけ・和えるだけ・塩コショウとオリーブオイルをかけるだけなど簡単な調理も積極的に提案してください。もう一品①②③は特に簡単な調理や箸休め、デザート感覚のものなど多様性を持たせてください。
 
